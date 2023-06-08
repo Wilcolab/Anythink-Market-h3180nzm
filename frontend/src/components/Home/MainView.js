@@ -35,7 +35,7 @@ const GlobalFeedTab = (props) => {
     <li className="nav-item">
       <button
         type="button"
-        style={{ color: "#77c4f9" }}
+        style={{ color: "#77c4ff" }}
         className={props.tab === "all" ? "nav-link active" : "nav-link"}
         onClick={clickHandler}
       >
