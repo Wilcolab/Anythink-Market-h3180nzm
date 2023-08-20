@@ -21,3 +21,14 @@ echo "printf \"\n\x1b[31m \x1b[1m👉 Type: \\\`docker-compose up\\\` to run the
 
 # Change backend port visibility to public
 echo "(&>/dev/null .devcontainer/open_port.sh &)" >> ~/.bashrc
+
+
+echo "Waiting for Docker to start"
+# Wait for Docker to start up
+while [ ! -S /var/run/docker.sock ]; do
+  echo -n "."
+  /usr/local/share/docker-init.sh
+  sleep 1
+done
+
+echo "Docker is running!"
