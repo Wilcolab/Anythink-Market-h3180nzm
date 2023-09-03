@@ -24,6 +24,7 @@ def create_jwt_token(
     return jwt.encode(to_encode, secret_key, algorithm=ALGORITHM)
 
 
+
 def create_access_token_for_user(user: User, secret_key: str) -> str:
     return create_jwt_token(
         jwt_content=JWTUser(username=user.username).dict(),
