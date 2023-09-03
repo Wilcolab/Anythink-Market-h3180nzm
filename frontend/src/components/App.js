@@ -11,7 +11,7 @@ import Profile from "./Profile";
 import ProfileFavorites from "./ProfileFavorites";
 import Register from "./Register";
 import Settings from "./Settings";
-import { Route, Routes, useNavigate } from "react-router-dom";
+import { Route, Routes, useNavigate, Navigate } from "react-router-dom";
 
 const mapStateToProps = (state) => {
   return {
@@ -31,6 +31,11 @@ const mapDispatchToProps = (dispatch) => ({
 const App = (props) => {
   const { redirectTo, onRedirect, onLoad } = props;
   const navigate = useNavigate();
+
+  const PrivateRoute = ({ children }) => {
+    // const auth = true; // determine if authorized, from context or however you're doing it
+    return props.currentUser ? children : <Navigate to="/login" />;
+  }
 
   useEffect(() => {
     if (redirectTo) {
@@ -61,7 +66,11 @@ const App = (props) => {
           <Route path="/editor/:slug" element={<Editor/>} />
           <Route path="/editor" element={<Editor/>} />
           <Route path="/item/:id" element={<Item/>} />
-          <Route path="/settings" element={<Settings/>} />
+          <Route path="/settings" element={<PrivateRoute>
+           <Settings/>
+          </PrivateRoute>
+        } />
+          
           <Route path="/:username/favorites" element={<ProfileFavorites/>} />
           <Route path="/:username" element={<Profile/>} />
         </Routes>
