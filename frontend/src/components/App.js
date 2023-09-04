@@ -64,7 +64,6 @@ const App = (props) => {
       }
       agent.setToken(token);
     }
-    navigate(`/login?tokenDate=${getExpiry(token)}`);
     onLoad(token ? agent.Auth.current() : null, token);
   }, [onLoad]);
 
