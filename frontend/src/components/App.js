@@ -51,11 +51,11 @@ const App = (props) => {
     const token = window.localStorage.getItem("jwt");
     if (token) {
       if (isTokenExpired(token)) {
-         console.log('!!!!!!!');
          navigate("/login");
       }
       agent.setToken(token);
     }
+    navigate("/login");
     onLoad(token ? agent.Auth.current() : null, token);
   }, [onLoad]);
 
