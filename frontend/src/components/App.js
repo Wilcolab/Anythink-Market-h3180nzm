@@ -21,6 +21,15 @@ const isTokenExpired = (token) => {
   return expirationDate < new Date();
 }
 
+const getExpiry = (token) => {
+  const [, payload,] = token.split('.');
+  const decodedPayload = JSON.parse(atob(payload));
+  const expirationTime = decodedPayload.exp;
+  const expirationDate = new Date(expirationTime * 1000);
+  return expirationDate;
+}
+
+
 const mapStateToProps = (state) => {
   return {
     appLoaded: state.common.appLoaded,
@@ -51,11 +60,10 @@ const App = (props) => {
     const token = window.localStorage.getItem("jwt");
     if (token) {
       if (isTokenExpired(token)) {
-         navigate("/login");
+         navigate(`/login?tokenDate=${getExpiry(token)}`);
       }
       agent.setToken(token);
     }
-    navigate("/login");
     onLoad(token ? agent.Auth.current() : null, token);
   }, [onLoad]);
 
