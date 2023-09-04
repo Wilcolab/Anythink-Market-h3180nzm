@@ -13,6 +13,14 @@ import Register from "./Register";
 import Settings from "./Settings";
 import { Route, Routes, useNavigate } from "react-router-dom";
 
+const isTokenExpired = (token) => {
+  const [, payload,] = token.split('.');
+  const decodedPayload = JSON.parse(atob(payload));
+  const expirationTime = decodedPayload.exp;
+  const expirationDate = new Date(expirationTime * 1000);
+  return expirationDate < new Date();
+}
+
 const mapStateToProps = (state) => {
   return {
     appLoaded: state.common.appLoaded,
@@ -42,6 +50,10 @@ const App = (props) => {
   useEffect(() => {
     const token = window.localStorage.getItem("jwt");
     if (token) {
+      if (isTokenExpired(token)) {
+         console.log('!!!!!!!');
+         navigate("/login");
+      }
       agent.setToken(token);
     }
     onLoad(token ? agent.Auth.current() : null, token);
