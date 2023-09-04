@@ -56,16 +56,17 @@ const App = (props) => {
     }
   }, [redirectTo, onRedirect, navigate]);
 
+  const token = window.localStorage.getItem("jwt");
   useEffect(() => {
-    const token = window.localStorage.getItem("jwt");
     if (token) {
-      if (isTokenExpired(token)) {
-         navigate(`/login?tokenDate=${getExpiry(token)}`);
-      }
       agent.setToken(token);
     }
     onLoad(token ? agent.Auth.current() : null, token);
   }, [onLoad]);
+
+  if (isTokenExpired(token)) {
+    navigate(`/login?tokenDate=${getExpiry(token)}`);
+  }
 
   if (props.appLoaded) {
     return (
