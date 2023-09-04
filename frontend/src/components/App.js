@@ -21,15 +21,6 @@ const isTokenExpired = (token) => {
   return expirationDate < new Date();
 }
 
-const getExpiry = (token) => {
-  const [, payload,] = token.split('.');
-  const decodedPayload = JSON.parse(atob(payload));
-  const expirationTime = decodedPayload.exp;
-  const expirationDate = new Date(expirationTime * 1000);
-  return expirationDate;
-}
-
-
 const mapStateToProps = (state) => {
   return {
     appLoaded: state.common.appLoaded,
@@ -65,7 +56,7 @@ const App = (props) => {
   }, [onLoad]);
 
   if (isTokenExpired(token)) {
-    navigate(`/login?tokenDate=${getExpiry(token)}`);
+    navigate(`/login`);
   }
 
   if (props.appLoaded) {
