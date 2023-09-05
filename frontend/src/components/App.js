@@ -54,15 +54,15 @@ const App = (props) => {
   const token = window.localStorage.getItem("jwt");
   useEffect(() => {
     if (token) {
+      if (isTokenExpired(token)) {
+        navigate(`/login`);
+      }    
       agent.setToken(token);
     }
     onLoad(token ? agent.Auth.current() : null, token);
   }, [onLoad]);
 
-  if (isTokenExpired(token)) {
-    navigate(`/login`);
-  }
-
+  
   if (props.appLoaded) {
     return (
       <div>
