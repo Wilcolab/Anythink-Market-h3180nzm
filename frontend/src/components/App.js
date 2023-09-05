@@ -77,7 +77,7 @@ const App = (props) => {
           <Route path="/editor/:slug" element={<Editor/>}/>
           <Route path="/editor" element={<Editor/>}/>
           <Route path="/item/:id" element={<Item/>}/>
-          <Route path="/settings2"
+          <Route path="/settings"
                  element={
                    <PrivateRoute
                      userAuthenticated={!!props.currentUser}>
