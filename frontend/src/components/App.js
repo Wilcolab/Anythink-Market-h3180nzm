@@ -14,7 +14,7 @@ import Settings from "./Settings";
 import { Route, Routes, useNavigate, Navigate } from "react-router-dom";
 
 const PrivateRoute = ({ children, userAuthenticated }) => {
-  return auth ? children : <Navigate to="/login"/>;
+  return userAuthenticated ? children : <Navigate to="/login"/>;
 }
 
 const isTokenExpired = (token) => {
@@ -79,15 +79,13 @@ const App = (props) => {
           <Route path="/item/:id" element={<Item/>}/>
           <Route path="/settings"
                  element={
-                   <PrivateRoute
-                     userAuthenticated={!!props.currentUser}>
+                   <PrivateRoute userAuthenticated={!!props.currentUser}>
                      <Settings/>
                    </PrivateRoute>
                  }/>
           <Route path="/:username/favorites" element={<ProfileFavorites/>}/>
           <Route path="/:username" element={<Profile/>}/>
         </Routes>
-        }
       </div>
     );
   }
