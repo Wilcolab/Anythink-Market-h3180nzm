@@ -56,7 +56,7 @@ const App = (props) => {
   }, [onLoad]);
 
   if (isTokenExpired(token)) {
-    navigate(`/login2`);
+    navigate(`/login`);
   }
 
   if (props.appLoaded) {
