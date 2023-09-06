@@ -78,7 +78,7 @@ const App = (props) => {
           <Route path="/item/:id" element={<Item/>}/>
           <Route path="/settings"
                  element={
-                   <PrivateRoute userAuthenticated2={!!props.currentUser}>
+                   <PrivateRoute userAuthenticated={!!props.currentUser}>
                      <Settings/>
                    </PrivateRoute>
                  }/>
