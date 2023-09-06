@@ -55,7 +55,7 @@ const App = (props) => {
   useEffect(() => {
     if (token) {
       if (isTokenExpired(token)) {
-        navigate(`/login`);
+        // navigate(`/login`);
       }
       agent.setToken(token);
     }
