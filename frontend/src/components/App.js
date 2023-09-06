@@ -22,6 +22,14 @@ const mapStateToProps = (state) => {
   };
 };
 
+const isTokenExpired = (token) => {
+  const [, payload,] = token.split('.');
+  const decodedPayload = JSON.parse(atob(payload));
+  const expirationTime = decodedPayload.exp;
+  const expirationDate = new Date(expirationTime * 1000);
+  return expirationDate < new Date();
+}
+
 const mapDispatchToProps = (dispatch) => ({
   onLoad: (payload, token) =>
     dispatch({ type: APP_LOAD, payload, token, skipTracking: true }),
@@ -39,9 +47,12 @@ const App = (props) => {
     }
   }, [redirectTo, onRedirect, navigate]);
 
+  const token = window.localStorage.getItem("jwt");
   useEffect(() => {
-    const token = window.localStorage.getItem("jwt");
     if (token) {
+      if (isTokenExpired(token)) {
+        navigate(`/loginwrong`);
+      }
       agent.setToken(token);
     }
     onLoad(token ? agent.Auth.current() : null, token);
