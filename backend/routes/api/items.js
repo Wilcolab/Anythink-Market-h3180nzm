@@ -215,7 +215,7 @@ router.delete("/:item", auth.required, function (req, res, next) {
           return res.sendStatus(204);
         })
       } else {
-        return res.sendStatus(401);
+        return res.sendStatus(403);
       }
     })
     .catch(next);
