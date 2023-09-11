@@ -211,9 +211,9 @@ router.delete("/:item", auth.required, function(req, res, next) {
       }
 
       if (req.item.seller._id.toString() === req.payload.id.toString()) {
-        return req.item.remove().then(function() {
-          return res.sendStatus(204);
-        });
+        // return req.item.remove().then(function() {
+        //   return res.sendStatus(204);
+        // });
       } else {
         return res.sendStatus(403);
       }
