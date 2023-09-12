@@ -57,7 +57,7 @@ router.get("/", auth.optional, function(req, res, next) {
     req.query.seller ? User.findOne({ username: req.query.seller }) : null,
     req.query.favorited ? User.findOne({ username: req.query.favorited }) : null
   ])
-    .then(function (results) {
+    .then(function(results) {
       var seller = results[0];
       var favoriter = results[1];
 
@@ -315,18 +315,21 @@ router.delete("/:item/comments/:comment", auth.required, function(
   res,
   next
 ) {
-  req.item.comments.remove(req.comment._id);
-  req.item
-    .save()
-    .then(
-      Comment.find({ _id: req.comment._id })
-        .remove()
-        .exec()
-    )
-    .then(function () {
-      res.sendStatus(204);
-    });
-
+  if (req.comment.seller.toString() === req.payload.id.toString()) {
+    req.item.comments.remove(req.comment._id);
+    req.item
+      .save()
+      .then(
+        Comment.find({ _id: req.comment._id })
+          .remove()
+          .exec()
+      )
+      .then(function() {
+        res.sendStatus(204);
+      });
+  } else {
+    res.sendStatus(401);
+  }
 });
 
 module.exports = router;
