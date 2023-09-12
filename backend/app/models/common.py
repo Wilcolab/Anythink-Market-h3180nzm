@@ -3,6 +3,7 @@ import datetime
 from pydantic import BaseModel, Field, validator
 
 
+
 class DateTimeModelMixin(BaseModel):
     created_at: datetime.datetime = None  # type: ignore
     updated_at: datetime.datetime = None  # type: ignore
