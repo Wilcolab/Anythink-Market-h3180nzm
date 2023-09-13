@@ -12,6 +12,7 @@ from app.models.domain.users import User
 from app.resources import strings
 
 
+
 async def get_comment_by_id_from_path(
     comment_id: int = Path(..., ge=1),
     item: Item = Depends(items.get_item_by_slug_from_path),
