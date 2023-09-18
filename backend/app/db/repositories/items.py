@@ -1,7 +1,7 @@
 from typing import List, Optional, Sequence, Union
 
 from asyncpg import Connection, Record
-from pypika import Query, Order
+from pypika import Query
 
 from app.db.errors import EntityDoesNotExist
 from app.db.queries.queries import queries
@@ -18,6 +18,7 @@ from app.db.repositories.profiles import ProfilesRepository
 from app.db.repositories.tags import TagsRepository
 from app.models.domain.items import Item
 from app.models.domain.users import User
+from app.models.domain.profiles import Profile
 
 SELLER_USERNAME_ALIAS = "seller_username"
 SLUG_ALIAS = "slug"
@@ -72,35 +73,25 @@ class ItemsRepository(BaseRepository):  # noqa: WPS214
         title: Optional[str] = None,
         body: Optional[str] = None,
         description: Optional[str] = None,
-        image: Optional[str] = None, 
-        tags: Optional[Sequence[str]] = None,
     ) -> Item:
         updated_item = item.copy(deep=True)
+        updated_item.slug = slug or updated_item.slug
         updated_item.title = title or item.title
         updated_item.body = body or item.body
         updated_item.description = description or item.description
-        updated_item.image = image or item.image
 
         async with self.connection.transaction():
             updated_item.updated_at = await queries.update_item(
                 self.connection,
                 slug=item.slug,
-                seller_username=item.seller.username,            
+                seller_username=item.seller.username,
+                new_slug=updated_item.slug,
                 new_title=updated_item.title,
                 new_body=updated_item.body,
                 new_description=updated_item.description,
-                new_image=updated_item.image,
             )
 
-        if tags:
-            await self._tags_repo.create_tags_that_dont_exist(tags=tags)
-            await self._unlink_item_from_tags(slug=item.slug)
-            await self._link_item_with_tags(slug=item.slug, tags=tags)
-
-        return await self.get_item_by_slug(
-            slug=item.slug,
-            requested_user=item.seller,
-        )
+        return updated_item
 
     async def delete_item(self, *, item: Item) -> None:
         async with self.connection.transaction():
@@ -135,18 +126,9 @@ class ItemsRepository(BaseRepository):  # noqa: WPS214
             items.image,
             items.created_at,
             items.updated_at,
-            Query.from_(
-                users,
-            ).where(
-                users.id == items.seller_id,
-            ).select(
-                users.username,
-            ).as_(
-                SELLER_USERNAME_ALIAS,
-            ),
-        ).orderby(
-            items.created_at, order=Order.desc,
-        )
+            users.star,
+            Query.from_(items_to_tags).where(items.id == items_to_tags.item_id).select(items_to_tags.tag).limit(1).as_('has_tags')
+        ).inner_join(users).on(users.id == items.seller_id)
         # fmt: on
 
         if tag:
@@ -174,19 +156,11 @@ class ItemsRepository(BaseRepository):  # noqa: WPS214
             query_params_count += 1
 
             # fmt: off
-            query = query.join(
-                users,
-            ).on(
-                (items.seller_id == users.id) & (
-                    users.id == Query.from_(
-                        users,
-                    ).where(
-                        users.username == Parameter(query_params_count),
+            query = query.where(
+                  users.username == Parameter(query_params_count),
                     ).select(
                         users.id,
                     )
-                ),
-            )
             # fmt: on
 
         if favorited:
@@ -217,7 +191,13 @@ class ItemsRepository(BaseRepository):  # noqa: WPS214
         items_rows = await self.connection.fetch(query.get_sql(), *query_params)
 
         return [
-            await self.get_item_by_slug(slug=item_row['slug'], requested_user=requested_user)
+                await self._get_item_from_db_record(
+                item_row=item_row,
+                slug=item_row[SLUG_ALIAS],
+                seller=Profile(username=item_row['username'], bio=item_row['bio'], image=item_row['image']),
+                requested_user=requested_user,
+                has_tags= True if item_row['has_tags'] else False
+            )
             for item_row in items_rows
         ]
 
@@ -306,27 +286,23 @@ class ItemsRepository(BaseRepository):  # noqa: WPS214
         *,
         item_row: Record,
         slug: str,
-        seller_username: str,
+        seller_username: Optional[str] = None,
+        seller: Optional[User] = None,
         requested_user: Optional[User],
+        has_tags: Optional[bool] = True
     ) -> Item:
-        title_query = Query.from_(items).select(items.title).where(items.slug == slug)
-        result_rows = await self.connection.fetch(title_query.get_sql())
-        if not len(result_rows):
-            raise Exception(f'No item with slug {slug}')
-        title = result_rows[0]['title']
-
         return Item(
             id_=item_row["id"],
             slug=slug,
-            title=title,
+            title=item_row["title"],
             description=item_row["description"],
             body=item_row["body"],
             image=item_row["image"],
             seller=await self._profiles_repo.get_profile_by_username(
                 username=seller_username,
                 requested_user=requested_user,
-            ),
-            tags=await self.get_tags_for_item_by_slug(slug=slug),
+            ) if seller_username else seller,
+            tags=await self.get_tags_for_item_by_slug(slug=slug) if has_tags else [],
             favorites_count=await self.get_favorites_count_for_item_by_slug(
                 slug=slug,
             ),
@@ -344,10 +320,4 @@ class ItemsRepository(BaseRepository):  # noqa: WPS214
         await queries.add_tags_to_item(
             self.connection,
             [{SLUG_ALIAS: slug, "tag": tag} for tag in tags],
-        )
-
-    async def _unlink_item_with_tags(self, *, slug: str) -> None:
-        await queries.delete_tags_from_item(
-            self.connection,
-                slug=slug,
         )
